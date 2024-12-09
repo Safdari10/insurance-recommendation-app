@@ -1,5 +1,5 @@
-# Stage 1: Build the React application
-FROM node AS build
+# Base stage: Set up the environment
+FROM node:20-slim AS base
 
 # Set environment variables for pnpm
 ENV PNPM_HOME="/pnpm"
@@ -11,28 +11,25 @@ RUN corepack enable
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and pnpm-lock.yaml to the working directory
+# Copy only the lockfile and package.json for better caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
-RUN pnpm install --frozen-lockfile
+# Install dependencies with caching
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Debug step: List contents of node_modules
-RUN ls -la node_modules
+# Build stage: Compile the React application
+FROM base AS build
 
-# Debug step: List contents of node_modules/vite/bin
-RUN ls -la node_modules/vite/bin || echo "vite not found"
-
-# Copy the rest of the application code to the working directory
+# Copy the application code
 COPY . .
 
 # Build the application
 RUN pnpm run build
 
-# Stage 2: Serve the built files using nginx
+# Final stage: Serve the built files using nginx
 FROM nginx:alpine
 
-# Copy the built files from the previous stage to the nginx html directory
+# Copy the built files from the build stage
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
 
 # Copy the nginx configuration file
