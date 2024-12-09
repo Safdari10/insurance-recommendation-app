@@ -1,20 +1,22 @@
 services:
   backend:
     build:
-      context: ./backend 
-      dockerfile: Dockerfile 
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "3001:3001"
     environment:
       - PORT=3001
-      - GEMINI_API_KEY= AIzaSyA-yp5bUzo7qgMmC7tIsLQz9y3hBA4tW9M
+      - GEMINI_API_KEY={API_KEY}
+    env_file:
+      - .env
     networks:
       - app-network
 
   frontend:
     build:
-      context: ./frontend 
-      dockerfile: Dockerfile 
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "5173:80"
     environment:
