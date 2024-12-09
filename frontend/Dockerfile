@@ -12,7 +12,7 @@ RUN corepack enable
 WORKDIR /usr/src/app
 
 # Copy only the lockfile and package.json for better caching
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ./ 
 
 # Install dependencies with caching
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
@@ -21,21 +21,21 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 FROM base AS build
 
 # Copy the application code
-COPY . .
+COPY . . 
 
-# Build the application
+# Build the application (outputs to /dist)
 RUN pnpm run build
 
 # Final stage: Serve the built files using nginx
 FROM nginx:alpine
 
-# Copy the built files from the build stage
+# Copy the nginx configuration file (ensure this file is present)
+COPY nginx.conf /etc/nginx/nginx.conf 
+
+# Copy the built files from the build stage into the Nginx html folder
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
 
-# Copy the nginx configuration file
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose port 80
+# Expose port 80 for serving the app
 EXPOSE 80
 
 # Start nginx
